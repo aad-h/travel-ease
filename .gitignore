@@ -1,0 +1,49 @@
+# Dependencies and package-manager state
+/node_modules/
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Tests and reports
+/coverage/
+
+# Next.js and production output
+/.next/
+/out/
+/build/
+/dist/
+
+# Local environment and secrets (the template is intentionally tracked)
+.env
+.env.*
+!.env.example
+
+# Hosting and deployment state
+/.vercel/
+
+# Logs and debug output
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Caches and generated metadata
+*.tsbuildinfo
+next-env.d.ts
+.cache/
+.turbo/
+
+# IDE and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local certificates and keys
+*.pem
+*.key
