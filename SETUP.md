@@ -83,9 +83,15 @@ npm run dev
 
 Test sign-up, login, logout, Google sign-in, password reset, destination search, nearby places, route display, saving a trip, loading trips, and deleting a trip.
 
-## 7. GitHub and Vercel (after migration review)
+## 7. GitHub and Vercel
 
-Git must not be initialized until the migration report has been reviewed. After approval, initialize this directory as a new repository, make small logical commits, and add `https://github.com/aad-h/travel-ease.git` as `origin`. Do not connect it to the original repository's history.
+The reviewed migration has been initialized as a new repository with small logical commits and no connection to the original repository's history. Its `origin` target is `https://github.com/aad-h/travel-ease.git`.
+
+On a machine authenticated with write access to that repository, publish it with:
+
+```bash
+git push -u origin main
+```
 
 Then deploy:
 
