@@ -98,4 +98,4 @@ After adding real values only to `.env.local`, open `http://localhost:3000`.
 
 The owner approved the migration review. A brand-new repository was initialized with focused logical commits and no connection to the original history. Commit metadata uses `aad-h <aad-h@users.noreply.github.com>` so the machine's school email is not exposed.
 
-`origin` is configured as `https://github.com/aad-h/travel-ease.git`. The remote was confirmed to have no branch history, but GitHub rejected the push because this machine's SSH key authenticates as `aadi-h`, which does not currently have write permission to the `aad-h` repository. Nothing has been pushed or overwritten. Grant `aadi-h` write access to the repository or authenticate this machine as the owning `aad-h` account, then run `git push -u origin main`.
+`origin` is configured as `https://github.com/aad-h/travel-ease.git`. A dedicated SSH key was created for the `aad-h` account without replacing the machine's existing GitHub identity. GitHub verified the new key as `aad-h`, and branch `main` was published successfully without overwriting any prior history.
