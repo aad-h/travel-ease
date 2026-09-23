@@ -69,6 +69,13 @@ The application code has not been changed in this migration because the request 
 6. Set `REDIRECT_URI=http://localhost:3000/api/auth/google/callback`.
 7. After Vercel assigns a domain, add `https://YOUR_DOMAIN/api/auth/google/callback` to the OAuth client and use that exact URL as Vercel's `REDIRECT_URI`.
 
+For local development, the OAuth client must be a **Web application** with:
+
+- Authorized JavaScript origin: `http://localhost:3000`
+- Authorized redirect URI: `http://localhost:3000/api/auth/google/callback`
+
+The redirect URI must match exactly, including protocol, port, capitalization, and path. After changing `.env.local`, stop and restart `npm run dev`. TravelEase now reports a clear configuration message when the client ID or secret is missing and verifies the OAuth state cookie on callback.
+
 ## 5. Password-reset email
 
 1. Choose an email provider that offers SMTP credentials.

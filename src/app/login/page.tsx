@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
-
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
@@ -12,7 +11,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
-
   const auth = useAuth();
   const router = useRouter();
 
@@ -28,157 +26,92 @@ export default function LoginPage() {
     if (errorCode) setError(messages[errorCode] || 'Google sign-in failed. Please try again.');
   }, []);
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
     setLoading(true);
     setError('');
-
     try {
       const result = await auth.login(email, password);
-
-      if (result.success) {
-
-        router.push('/dashboard');
-      } else {
-        setError(result.error || 'Login failed. Please try again.');
-      }
-    } catch (err) {
+      if (result.success) router.push('/dashboard');
+      else setError(result.error || 'Login failed. Please try again.');
+    } catch (loginError) {
+      console.error(loginError);
       setError('An unexpected error occurred. Please try again.');
-      console.error(err);
     } finally {
       setLoading(false);
     }
-
   };
 
-  // This method helps with login in with google 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     setError('');
-
     try {
-      //calls the auth context function
       const result = await auth.googleAuth('login');
-
-      if (!result.success) {
-        setError(result.error || 'Google login failed. Please try again.');
-      }
-    } catch (err) {
+      if (!result.success) setError(result.error || 'Google login failed. Please try again.');
+    } catch (googleError) {
+      console.error(googleError);
       setError('An unexpected error occurred with Google login. Please try again.');
-      console.error(err);
     } finally {
       setGoogleLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">TravelEase</h1>
-          <p className="text-gray-600 mt-2">Sign in to your account</p>
+    <main className="min-h-screen bg-slate-950 lg:grid lg:grid-cols-[1.05fr_0.95fr]">
+      <section className="relative hidden overflow-hidden p-12 text-white lg:flex lg:flex-col lg:justify-between">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.45),transparent_35%),radial-gradient(circle_at_80%_75%,rgba(16,185,129,0.25),transparent_35%)]" />
+        <div className="relative flex items-center gap-3">
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-lg font-black text-blue-700">T</span>
+          <span className="text-xl font-bold">TravelEase</span>
         </div>
+        <div className="relative max-w-xl">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-blue-100"><span className="h-2 w-2 rounded-full bg-emerald-400" /> Your whole trip, one clear plan</div>
+          <h1 className="text-5xl font-bold leading-tight tracking-tight">Go from “somewhere” to a day-by-day itinerary.</h1>
+          <p className="mt-6 max-w-lg text-lg leading-8 text-slate-300">Balance budget, interests, hidden gems, food, and travel pace—without starting from a blank page.</p>
+          <div className="mt-10 grid grid-cols-3 gap-3 text-sm">
+            {['Personalized days', 'Map-ready stops', 'No paid AI calls'].map(item => <div key={item} className="rounded-2xl border border-white/10 bg-white/5 p-4 text-slate-200"><span className="mb-3 block text-emerald-400">✓</span>{item}</div>)}
+          </div>
+        </div>
+        <p className="relative text-xs text-slate-500">Plan thoughtfully. Verify live hours, prices, and availability with the provider.</p>
+      </section>
 
-        <div className="bg-white p-8 rounded-lg shadow-md">
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
-              {error}
-            </div>
-          )}
+      <section className="flex min-h-screen items-center justify-center bg-slate-50 px-5 py-10 sm:px-8">
+        <div className="w-full max-w-md">
+          <div className="mb-8 lg:hidden">
+            <div className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-lg font-black text-white">T</span><span className="text-xl font-bold text-slate-950">TravelEase</span></div>
+          </div>
+          <div className="mb-8">
+            <p className="text-sm font-semibold text-blue-600">WELCOME BACK</p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">Continue planning</h2>
+            <p className="mt-2 text-sm text-slate-500">Sign in to open your trips and itinerary workspace.</p>
+          </div>
 
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
-                required
-                placeholder="your@email.com"
-              />
-            </div>
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60 sm:p-8">
+            {error && <div role="alert" className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-700">{error}</div>}
 
-            <div className="mb-6">
-              <div className="flex justify-between items-center mb-1">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Password
-                </label>
-                <Link
-                  href="/auth/forgot-password"
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
-                required
-                placeholder="••••••••"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Signing in...' : 'Sign in'}
+            <button type="button" onClick={handleGoogleLogin} disabled={googleLoading} className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:opacity-50">
+              <GoogleIcon /> {googleLoading ? 'Connecting to Google…' : 'Continue with Google'}
             </button>
-          </form>
 
-          <div className="my-4 flex items-center">
-            <div className="flex-grow border-t border-gray-300"></div>
-            <span className="px-3 text-gray-500 text-sm">or</span>
-            <div className="flex-grow border-t border-gray-300"></div>
-          </div>
+            <div className="my-6 flex items-center gap-3"><div className="h-px flex-1 bg-slate-200" /><span className="text-xs font-semibold uppercase tracking-wider text-slate-400">or use email</span><div className="h-px flex-1 bg-slate-200" /></div>
 
-          <button
-            type="button"
-            className="w-full py-2 px-4 bg-white border border-gray-300 text-gray-700 font-medium rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center"
-            onClick={handleGoogleLogin}
-            disabled={googleLoading}
-          >
-            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-              <path
-                fill="#4285F4"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-              />
-            </svg>
-            {googleLoading ? 'Signing in...' : 'Sign in with Google'}
-          </button>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div><label htmlFor="email" className="mb-2 block text-sm font-semibold text-slate-700">Email address</label><input id="email" type="email" value={email} onChange={event => setEmail(event.target.value)} className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100" required placeholder="you@example.com" autoComplete="email" /></div>
+              <div>
+                <div className="mb-2 flex items-center justify-between"><label htmlFor="password" className="text-sm font-semibold text-slate-700">Password</label><Link href="/auth/forgot-password" className="text-sm font-semibold text-blue-600 hover:text-blue-700">Forgot password?</Link></div>
+                <input id="password" type="password" value={password} onChange={event => setPassword(event.target.value)} className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100" required placeholder="Enter your password" autoComplete="current-password" />
+              </div>
+              <button type="submit" disabled={loading} className="w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none">{loading ? 'Signing in…' : 'Sign in'}</button>
+            </form>
 
-          <div className="mt-6 text-center text-sm">
-            Don&apos;t have an account?{' '}
-            <Link
-              href="/signup"
-              className="text-blue-600 hover:underline font-medium"
-            >
-              Create an account
-            </Link>
+            <p className="mt-6 text-center text-sm text-slate-500">New to TravelEase? <Link href="/signup" className="font-semibold text-blue-600 hover:text-blue-700">Create an account</Link></p>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
+}
+
+function GoogleIcon() {
+  return <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.31v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.09Z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.29-2.66l-3.57-2.77c-.99.66-2.24 1.06-3.72 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z"/><path fill="#FBBC05" d="M5.84 14.1A6.6 6.6 0 0 1 5.49 12c0-.73.13-1.43.35-2.1V7.07H2.18A11 11 0 0 0 1 12c0 1.78.43 3.45 1.18 4.93l3.66-2.84Z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A10.6 10.6 0 0 0 12 1a11 11 0 0 0-9.82 6.07L5.84 9.9A6.58 6.58 0 0 1 12 5.38Z"/></svg>;
 }
