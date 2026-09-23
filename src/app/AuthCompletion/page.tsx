@@ -12,7 +12,9 @@ export default function AuthCompletePage() {
       const encodedData = urlParams.get('data');
       
       if (encodedData) {
-        const decodedData = atob(encodedData);
+        const base64 = encodedData.replace(/-/g, '+').replace(/_/g, '/');
+        const paddedBase64 = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+        const decodedData = atob(paddedBase64);
         const userData = JSON.parse(decodedData);
         
         localStorage.setItem('user', JSON.stringify(userData));

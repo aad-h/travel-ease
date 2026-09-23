@@ -9,6 +9,16 @@ const REDIRECT_URI = process.env.REDIRECT_URI || 'http://localhost:3000/api/auth
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code');
+  const returnedState = request.nextUrl.searchParams.get('state');
+  const expectedState = request.cookies.get('google_oauth_state')?.value;
+
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+    return NextResponse.redirect(new URL('/login?error=google_not_configured', request.url));
+  }
+
+  if (!returnedState || !expectedState || returnedState !== expectedState) {
+    return NextResponse.redirect(new URL('/login?error=invalid_oauth_state', request.url));
+  }
   
   if (!code) {
     return NextResponse.json({ error: 'Authorization code missing' }, { status: 400 });
@@ -95,8 +105,10 @@ export async function GET(request: NextRequest) {
       token: token
     };
 
-    const encodedUserData = Buffer.from(JSON.stringify(userData)).toString('base64');
-    return NextResponse.redirect(new URL(`/AuthCompletion?data=${encodedUserData}`, request.url));
+    const encodedUserData = Buffer.from(JSON.stringify(userData)).toString('base64url');
+    const response = NextResponse.redirect(new URL(`/AuthCompletion?data=${encodedUserData}`, request.url));
+    response.cookies.delete('google_oauth_state');
+    return response;
     
   } catch (error) {
     console.error('Google auth error:', error);

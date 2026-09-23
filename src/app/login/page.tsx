@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -16,6 +15,18 @@ export default function LoginPage() {
 
   const auth = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    const errorCode = new URLSearchParams(window.location.search).get('error');
+    const messages: Record<string, string> = {
+      google_not_configured: 'Google sign-in is not configured yet.',
+      invalid_oauth_state: 'Google sign-in expired or could not be verified. Please try again.',
+      auth_failed: 'Google could not complete sign-in. Check the OAuth client and redirect URI.',
+      profile_failed: 'Google signed you in, but your profile could not be loaded.',
+      auth_error: 'Google sign-in could not be completed.'
+    };
+    if (errorCode) setError(messages[errorCode] || 'Google sign-in failed. Please try again.');
+  }, []);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();

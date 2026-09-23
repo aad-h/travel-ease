@@ -118,7 +118,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await fetch(`/api/auth/google?mode=${mode}`);
       
       if (!response.ok) {
-        return { success: false, error: await response.text() || `Google ${mode} failed` };
+        const contentType = response.headers.get('content-type');
+        const errorData = contentType?.includes('application/json')
+          ? await response.json()
+          : { error: await response.text() };
+        return { success: false, error: errorData.error || `Google ${mode} failed` };
       }
       
       const data = await response.json();
