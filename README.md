@@ -16,6 +16,7 @@ This repository is a clean migration of the existing TravelEase application from
 - Email/password authentication with bcrypt password hashes and signed JWTs
 - Google OAuth 2.0 login
 - Google Maps JavaScript, Places, and Routes APIs
+- Places API (New) server routes with explicit field masks
 - SMTP password-reset email through Nodemailer
 - Tailwind CSS 4 through PostCSS
 - Local deterministic itinerary scoring and knowledge retrieval (RAG-ready, no hosted AI)

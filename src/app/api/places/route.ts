@@ -1,72 +1,55 @@
 import { NextResponse } from 'next/server';
+import { placesApiConfigured, placesApiKey, placesApiRequest } from '@/lib/googlePlaces';
 
-const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API;
+interface AutocompleteResponse {
+  suggestions?: Array<{
+    placePrediction?: {
+      placeId?: string;
+      text?: { text?: string };
+      structuredFormat?: {
+        mainText?: { text?: string };
+        secondaryText?: { text?: string };
+      };
+    };
+  }>;
+}
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const query = searchParams.get('query');
-  
-  if (!query) {
-    return NextResponse.json({ error: 'Query parameter is required' }, { status: 400 });
+  const query = new URL(request.url).searchParams.get('query')?.trim();
+
+  if (!query) return NextResponse.json({ error: 'Query parameter is required' }, { status: 400 });
+  if (!placesApiConfigured()) {
+    return NextResponse.json({ error: 'Google Places is not configured. Add GOOGLE_PLACES_API to .env.local.' }, { status: 503 });
   }
 
-  if (!GOOGLE_PLACES_API_KEY) {
-    console.error('Google Places API key is not defined in environment variables');
-    return NextResponse.json({ error: 'API configuration error' }, { status: 500 });
-  }
-  
   try {
-    const apiUrl = new URL('https://maps.googleapis.com/maps/api/place/autocomplete/json');
-    
-    apiUrl.searchParams.append('input', query);
-    apiUrl.searchParams.append('types', '(cities)');
-    apiUrl.searchParams.append('key', GOOGLE_PLACES_API_KEY);
-    
-    console.log('Fetching from Places API:', query);
-    
-    const response = await fetch(apiUrl.toString(), {
-      method: 'GET',
+    const data = await placesApiRequest<AutocompleteResponse>('https://places.googleapis.com/v1/places:autocomplete', {
+      method: 'POST',
       headers: {
-        'Accept': 'application/json'
-      }
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': placesApiKey() as string,
+        'X-Goog-FieldMask': 'suggestions.placePrediction.placeId,suggestions.placePrediction.text,suggestions.placePrediction.structuredFormat'
+      },
+      body: JSON.stringify({ input: query, includedPrimaryTypes: ['(cities)'] })
     });
-    
-    if (!response.ok) {
-      const responseText = await response.text();
-      console.error('Google API error:', response.status, responseText);
-      return NextResponse.json({ 
-        error: `Google API error: ${response.status}`, 
-        details: responseText 
-      }, { status: 500 });
-    }
-    
-    const data = await response.json();
-    console.log('API response:', data);
-    
-    if (data.status && data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-      console.error('Google Places API error:', data.status, data.error_message);
-      return NextResponse.json({ 
-        error: `Google API error: ${data.status}`,
-        details: data.error_message 
-      }, { status: 500 });
-    }
-    
-    let suggestions = [];
-    if (data.predictions && Array.isArray(data.predictions)) {
-      suggestions = data.predictions.map((prediction: any) => ({
-        placeId: prediction.place_id,
-        mainText: prediction.structured_formatting?.main_text || prediction.description,
-        secondaryText: prediction.structured_formatting?.secondary_text || '',
-        description: prediction.description
-      }));
-    }
-    
+
+    const suggestions = (data.suggestions || [])
+      .map(({ placePrediction }) => {
+        if (!placePrediction?.placeId) return null;
+        const description = placePrediction.text?.text || placePrediction.structuredFormat?.mainText?.text || '';
+        return {
+          placeId: placePrediction.placeId,
+          mainText: placePrediction.structuredFormat?.mainText?.text || description,
+          secondaryText: placePrediction.structuredFormat?.secondaryText?.text || '',
+          description
+        };
+      })
+      .filter(Boolean);
+
     return NextResponse.json({ suggestions });
   } catch (error) {
-    console.error('Error fetching place suggestions:', error);
-    return NextResponse.json({ 
-      error: 'Failed to fetch suggestions',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    const details = error instanceof Error ? error.message : 'Unknown Places API error';
+    console.error('Places Autocomplete (New) failed:', details);
+    return NextResponse.json({ error: 'Places search failed. Confirm Places API (New) is enabled and the server key allows it.', details }, { status: 502 });
   }
-} 
+}

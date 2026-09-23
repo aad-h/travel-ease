@@ -1,83 +1,50 @@
 import { NextResponse } from 'next/server';
+import { placesApiConfigured, placesApiKey, placesApiRequest } from '@/lib/googlePlaces';
 
-const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API;
+interface PlaceDetailsResponse {
+  id?: string;
+  displayName?: { text?: string };
+  formattedAddress?: string;
+  location?: { latitude?: number; longitude?: number };
+  rating?: number;
+  userRatingCount?: number;
+  types?: string[];
+  websiteUri?: string;
+}
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const placeId = searchParams.get('placeId');
-  
-  if (!placeId) {
-    return NextResponse.json({ error: 'Place ID parameter is required' }, { status: 400 });
-  }
-  
-  if (!GOOGLE_PLACES_API_KEY) {
-    console.error('Google Places API key is not defined in environment variables');
-    return NextResponse.json({ error: 'API configuration error' }, { status: 500 });
-  }
-  
+  const placeId = new URL(request.url).searchParams.get('placeId');
+  if (!placeId) return NextResponse.json({ error: 'Place ID parameter is required' }, { status: 400 });
+  if (!placesApiConfigured()) return NextResponse.json({ error: 'Google Places is not configured. Add GOOGLE_PLACES_API to .env.local.' }, { status: 503 });
+
   try {
-    const apiUrl = new URL('https://maps.googleapis.com/maps/api/place/details/json');
-    
-    apiUrl.searchParams.append('place_id', placeId);
-    apiUrl.searchParams.append('fields', 'geometry,formatted_address,name,rating,reviews,types,photos');
-    apiUrl.searchParams.append('key', GOOGLE_PLACES_API_KEY);
-    
-    console.log('Fetching details for placeId:', placeId);
-    
-    const response = await fetch(apiUrl.toString(), {
+    const data = await placesApiRequest<PlaceDetailsResponse>(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`, {
       method: 'GET',
       headers: {
-        'Accept': 'application/json'
+        'X-Goog-Api-Key': placesApiKey() as string,
+        'X-Goog-FieldMask': 'id,displayName,formattedAddress,location,rating,userRatingCount,types,websiteUri'
       }
     });
-    
-    if (!response.ok) {
-      const responseText = await response.text();
-      console.error('Google API error:', response.status, responseText);
-      return NextResponse.json({ 
-        error: `Google API error: ${response.status}`,
-        details: responseText
-      }, { status: 500 });
+
+    if (data.location?.latitude === undefined || data.location.longitude === undefined) {
+      return NextResponse.json({ error: 'Place details did not include a location.' }, { status: 404 });
     }
-    
-    const data = await response.json();
-    console.log('Details API response:', data);
-    
-    if (data.status && data.status !== 'OK') {
-      console.error('Google Places API error:', data.status, data.error_message);
-      return NextResponse.json({ 
-        error: `Google API error: ${data.status}`,
-        details: data.error_message 
-      }, { status: 500 });
-    }
-    
-    if (!data.result) {
-      return NextResponse.json({ error: 'Place details not found' }, { status: 404 });
-    }
-    
-    const placeDetails = {
-      name: data.result.name,
-      address: data.result.formatted_address,
-      location: {
-        lat: data.result.geometry.location.lat,
-        lng: data.result.geometry.location.lng
-      },
-      rating: data.result.rating || null,
-      reviews: data.result.reviews || [],
-      types: data.result.types || [],
-      photos: data.result.photos ? data.result.photos.map((photo: any) => ({
-        reference: photo.photo_reference,
-        width: photo.width,
-        height: photo.height
-      })) : []
-    };
-    
-    return NextResponse.json({ placeDetails });
+
+    return NextResponse.json({ placeDetails: {
+      id: data.id,
+      name: data.displayName?.text || 'Unnamed place',
+      address: data.formattedAddress || '',
+      location: { lat: data.location.latitude, lng: data.location.longitude },
+      rating: data.rating || null,
+      userRatingsTotal: data.userRatingCount || 0,
+      types: data.types || [],
+      website: data.websiteUri || '',
+      reviews: [],
+      photos: []
+    } });
   } catch (error) {
-    console.error('Error fetching place details:', error);
-    return NextResponse.json({ 
-      error: 'Failed to fetch place details',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    const details = error instanceof Error ? error.message : 'Unknown Places API error';
+    console.error('Place Details (New) failed:', details);
+    return NextResponse.json({ error: 'Place details failed. Confirm Places API (New) is enabled and the server key allows it.', details }, { status: 502 });
   }
-} 
+}

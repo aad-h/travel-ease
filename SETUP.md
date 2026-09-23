@@ -48,16 +48,11 @@ For cost safety, create a small billing budget alert, review Maps Platform usage
 
 `NEXT_PUBLIC_GOOGLE_JSMAP_API` is intentionally sent to browsers, so its website and API restrictions are essential. The three server keys must not use the `NEXT_PUBLIC_` prefix.
 
-### Important Places API compatibility note
+### Places API (New) compatibility
 
-The preserved application calls the legacy Places endpoints at `maps.googleapis.com/maps/api/place/...`. Google placed those services in Legacy status on March 1, 2025, and does not make Legacy services available to new Cloud projects. Therefore, a brand-new Google Cloud project can supply Maps JavaScript and Routes, but its new Places key will not make the current Places requests work.
+The destination autocomplete, place details, and nearby-place server routes now use Places API (New) endpoints at `places.googleapis.com/v1/...`. This is required for a newly created Google Cloud project; the old `maps.googleapis.com/maps/api/place/...` endpoints are legacy and may be unavailable to new projects.
 
-After this clean migration is reviewed, choose one of these paths:
-
-- Recommended: authorize a focused code migration from Places API (Legacy) to Places API (New), then use the new server key described above.
-- Temporary compatibility path: if an original contributor owns a Cloud project where Places API (Legacy) was already enabled, ask them to grant or transfer authorized project access. Create a new restricted key there; do not copy their old key. This depends on contributor permission and keeps a legacy dependency, so it is not the long-term choice.
-
-The application code has not been changed in this migration because the request was to reproduce it faithfully before redesign or API migration.
+Keep `GOOGLE_PLACES_API` on a server-restricted key with Places API (New) enabled. The implementation uses explicit field masks and one nearby-search request per map search to avoid unnecessary data and requests. Google may still bill usage outside the applicable free allowance, so keep the key restrictions and project monitoring enabled.
 
 ## 4. Google sign-in
 
