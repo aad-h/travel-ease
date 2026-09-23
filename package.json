@@ -7,7 +7,8 @@
     "dev:turbo": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "node --test --experimental-strip-types src/lib/planner.test.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.8.0",
