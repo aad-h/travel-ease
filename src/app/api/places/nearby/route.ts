@@ -23,6 +23,16 @@ const priceLevelMap: Record<string, number> = {
   PRICE_LEVEL_VERY_EXPENSIVE: 4
 };
 
+// Nearby Search (New) accepts only requestable place types. Some legacy
+// response-only types (for example natural_feature and hiking_area) must not
+// be sent in includedTypes.
+const requestableTypes = new Set([
+  'aquarium', 'amusement_park', 'bar', 'bakery', 'cafe', 'casino',
+  'department_store', 'landmark', 'market', 'museum', 'night_club',
+  'park', 'restaurant', 'resort', 'shopping_mall', 'spa', 'tourist_attraction',
+  'zoo'
+]);
+
 export async function GET(request: Request) {
   const searchParams = new URL(request.url).searchParams;
   const location = searchParams.get('location');
@@ -33,7 +43,12 @@ export async function GET(request: Request) {
   const [latitude, longitude] = location.split(',').map(Number);
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return NextResponse.json({ error: 'Location coordinates are invalid.' }, { status: 400 });
 
-  const includedTypes = (types || 'tourist_attraction').split(',').map(type => type.trim()).filter(Boolean).slice(0, 20);
+  const requestedTypes = (types || 'tourist_attraction')
+    .split(',')
+    .map(type => type.trim())
+    .filter(Boolean);
+  const includedTypes = requestedTypes.filter(type => requestableTypes.has(type)).slice(0, 20);
+  if (includedTypes.length === 0) includedTypes.push('tourist_attraction');
 
   try {
     const data = await placesApiRequest<NearbyResponse>('https://places.googleapis.com/v1/places:searchNearby', {

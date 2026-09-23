@@ -210,6 +210,7 @@ export default function MapView({
   const [recommendedPlaces, setRecommendedPlaces] = useState<Place[]>(propRecommendedPlaces);
   const [locationCoords, setLocationCoords] = useState<{lat: number, lng: number} | null>(null);
   const [isLoadingPlaces, setIsLoadingPlaces] = useState(false);
+  const [placesError, setPlacesError] = useState<string | null>(null);
   
   // New state for day selection and tracking
   const [daySelection, setDaySelection] = useState<DaySelectionState>({
@@ -226,13 +227,13 @@ export default function MapView({
   
   // Define the interest type map for Google Places API
   const interestTypeMap: Record<string, string> = {
-    'history': 'museum,historic_site,landmark',
+    'history': 'museum,landmark',
     'food': 'restaurant,cafe,bakery',
-    'nature': 'park,natural_feature,hiking_area',
+    'nature': 'park,tourist_attraction',
     'shopping': 'shopping_mall,department_store,market',
     'nightlife': 'bar,night_club,casino',
     'adventure': 'amusement_park,zoo,aquarium',
-    'relaxation': 'spa,hot_spring,resort',
+    'relaxation': 'spa,resort',
     'family': 'zoo,museum,amusement_park,aquarium'
   };
   
@@ -358,6 +359,7 @@ export default function MapView({
     
     try {
       setIsLoadingPlaces(true);
+      setPlacesError(null);
       // Format the location as "lat,lng" and convert interests to a comma-separated list
       const interestTypes = interests.map(interest => interestTypeMap[interest] || interest).join(',');
       const url = `/api/places/nearby?location=${lat},${lng}&types=${interestTypes}`;
@@ -389,6 +391,7 @@ export default function MapView({
       }
     } catch (error) {
       console.error('Error fetching nearby places:', error);
+      setPlacesError(error instanceof Error ? error.message : 'Nearby place search failed.');
       setRecommendedPlaces([]);
     } finally {
       setIsLoadingPlaces(false);
@@ -1034,6 +1037,11 @@ export default function MapView({
             </svg>
             <h3 className="text-lg font-medium text-gray-700">No places found for this location</h3>
             <p className="text-gray-600 mt-2">Try a different destination or select different interests</p>
+            {placesError && (
+              <p className="max-w-xl mx-auto mt-3 text-sm text-red-600" role="alert">
+                {placesError}
+              </p>
+            )}
             <button
               onClick={handleDestinationSearch}
               className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md cursor-pointer transition-colors"
