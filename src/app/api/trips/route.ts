@@ -48,6 +48,9 @@ export async function POST(req: NextRequest) {
       travelPace,
       userId,
       dailyItineraries,
+      interests,
+      preferences,
+      planningGuidance,
     } = body;
     
     // Log what we received to debug missing fields
@@ -89,6 +92,9 @@ export async function POST(req: NextRequest) {
       places,
       travelPace,
       dailyItineraries,
+      interests,
+      preferences,
+      planningGuidance,
       userId,
     });
 
@@ -128,6 +134,9 @@ export async function PUT(req: NextRequest) {
       travelPace,
       userId,
       dailyItineraries,
+      interests,
+      preferences,
+      planningGuidance,
     } = body;
     
     // Log what we received
@@ -172,6 +181,9 @@ export async function PUT(req: NextRequest) {
       places,
       travelPace,
       dailyItineraries,
+      interests,
+      preferences,
+      planningGuidance,
       userId,
     });
 

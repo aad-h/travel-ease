@@ -10,7 +10,15 @@ import MapView from '../components/MapView';
 import TripsView from '../components/TripViews';
 import PlanTripView from '../components/PlanTripView';
 
-import { Place, Trip, InterestOption, DailyItinerary } from '@/lib/schema';
+import { Place, Trip, InterestOption, DailyItinerary, TripPreferences } from '@/lib/schema';
+
+const createDefaultPreferences = (): TripPreferences => ({
+  currency: 'USD',
+  travelers: 1,
+  dailyStartTime: '09:00',
+  dailyEndTime: '20:00',
+  hiddenGems: false
+});
 
 // Create a copy of the organizeItinerary function from MapView.tsx since we need it here
 function organizeItinerary(places: Place[], startDate: string, endDate: string): DailyItinerary[] {
@@ -122,6 +130,7 @@ export default function Dashboard() {
   const [endDate, setEndDate] = useState<string>('');
   const [travelPace, setTravelPace] = useState<string>('balanced');
   const [interests, setInterests] = useState<string[]>([]);
+  const [preferences, setPreferences] = useState<TripPreferences>(createDefaultPreferences);
   const [plannedTrips, setPlannedTrips] = useState<Trip[]>([]);
   const [currentLocation, setCurrentLocation] = useState<{lat: number, lng: number} | null>(null);
   const [mapCenter, setMapCenter] = useState<{lat: number, lng: number}>({ lat: 40.7128, lng: -74.0060 });
@@ -241,6 +250,8 @@ export default function Dashboard() {
     setStartDate(trip.startDate);
     setEndDate(trip.endDate);
     setTravelPace(trip.travelPace || 'balanced');
+    setInterests(trip.interests || []);
+    setPreferences(trip.preferences || createDefaultPreferences());
     setSelectedPlaces(trip.places);
     
     setEditingTripId(trip.id);
@@ -298,8 +309,33 @@ export default function Dashboard() {
       return;
     }
 
-    // Organize selected places into daily itineraries
-    const dailyItineraries = organizeItinerary(selectedPlaces, startDate, endDate);
+    let dailyItineraries = organizeItinerary(selectedPlaces, startDate, endDate);
+    let planningGuidance: string[] = [];
+
+    try {
+      const plannerResponse = await fetch('/api/itinerary/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          destination,
+          startDate,
+          endDate,
+          travelPace,
+          interests,
+          places: selectedPlaces,
+          preferences
+        })
+      });
+      const plannerResult = await plannerResponse.json();
+      if (!plannerResponse.ok) {
+        throw new Error(plannerResult.error || 'The smart planner could not generate an itinerary.');
+      }
+      dailyItineraries = plannerResult.dailyItineraries;
+      planningGuidance = plannerResult.planningGuidance;
+    } catch (error) {
+      console.error('Smart planner fallback:', error);
+      alert('The smart schedule could not be generated, so TravelEase will save a basic itinerary instead.');
+    }
     
     // Check if we're editing an existing trip or creating a new one
     const isEditing = !!editingTripId;
@@ -312,7 +348,10 @@ export default function Dashboard() {
       endDate,
       places: selectedPlaces,
       travelPace,
-      dailyItineraries
+      interests,
+      preferences,
+      dailyItineraries,
+      planningGuidance
     };
 
     // Pre-validate the data
@@ -362,6 +401,7 @@ export default function Dashboard() {
       setEndDate('');
       setTravelPace('balanced');
       setInterests([]);
+      setPreferences(createDefaultPreferences());
       setSelectedPlaces([]);
       setIsCreatingTrip(false);
       setEditingTripId(null); // Clear the editing state
@@ -534,6 +574,8 @@ export default function Dashboard() {
             travelPace={travelPace}
             setTravelPace={setTravelPace}
             interests={interests}
+            preferences={preferences}
+            setPreferences={setPreferences}
             interestOptions={interestOptions}
             toggleInterest={toggleInterest}
             selectedPlaces={selectedPlaces}
