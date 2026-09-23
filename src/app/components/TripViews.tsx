@@ -53,6 +53,18 @@ export default function TripsView({
     }
   };
 
+  const formatMoney = (amount: number, currency = 'USD') => {
+    try {
+      return new Intl.NumberFormat(undefined, {
+        style: 'currency',
+        currency,
+        maximumFractionDigits: 0
+      }).format(amount);
+    } catch {
+      return `${currency} ${amount}`;
+    }
+  };
+
   return (
     <div>
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -93,6 +105,33 @@ export default function TripsView({
                         {trip.places.length} place{trip.places.length !== 1 ? 's' : ''} planned
                       </span>
                     </div>
+                    <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                      {trip.preferences?.budget !== undefined && (
+                        <span className="rounded-full bg-emerald-100 px-2 py-1 text-emerald-800">
+                          Budget: {formatMoney(trip.preferences.budget, trip.preferences.currency)}
+                        </span>
+                      )}
+                      {trip.preferences?.travelers && (
+                        <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700">
+                          {trip.preferences.travelers} traveler{trip.preferences.travelers === 1 ? '' : 's'}
+                        </span>
+                      )}
+                      {trip.preferences?.hotelName && (
+                        <span className="rounded-full bg-indigo-100 px-2 py-1 text-indigo-800">
+                          Base: {trip.preferences.hotelName}
+                        </span>
+                      )}
+                      {trip.preferences?.hiddenGems && (
+                        <span className="rounded-full bg-amber-100 px-2 py-1 text-amber-800">
+                          Hidden gems prioritized
+                        </span>
+                      )}
+                    </div>
+                    {trip.interests && trip.interests.length > 0 && (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Interests: {trip.interests.join(', ')}
+                      </p>
+                    )}
                   </div>
                   <div className="flex space-x-2">
                     <button
@@ -146,6 +185,77 @@ export default function TripsView({
                   <div className="mt-4 text-sm text-gray-500 italic">
                     No places added to this trip yet. Use "View on Map" to add some attractions!
                   </div>
+                )}
+
+                {trip.dailyItineraries && trip.dailyItineraries.length > 0 && (
+                  <details className="mt-4 rounded-lg border border-blue-100 bg-blue-50 p-4">
+                    <summary className="cursor-pointer font-medium text-blue-900">
+                      View smart day-by-day itinerary
+                    </summary>
+                    <div className="mt-4 space-y-4">
+                      {trip.dailyItineraries.map((day, dayIndex) => (
+                        <section key={day.date} className="rounded-md bg-white p-3 shadow-sm">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <h4 className="font-semibold">
+                              {day.title || `Day ${dayIndex + 1}`} · {formatDate(day.date)}
+                            </h4>
+                            {day.estimatedBudget !== undefined && trip.preferences && (
+                              <span className="text-sm text-emerald-700">
+                                Daily target: {formatMoney(day.estimatedBudget, trip.preferences.currency)}
+                              </span>
+                            )}
+                          </div>
+                          {day.stops && day.stops.length > 0 ? (
+                            <ol className="mt-3 space-y-3">
+                              {day.stops.map((stop, stopIndex) => (
+                                <li key={`${day.date}-${stop.place.id}-${stopIndex}`} className="border-l-2 border-blue-300 pl-3">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="font-mono text-xs text-blue-700">{stop.time}</span>
+                                    <span className="font-medium">{stop.place.name}</span>
+                                    <span className="text-xs text-gray-500">
+                                      Est. {formatMoney(stop.estimatedCost, trip.preferences?.currency)}
+                                    </span>
+                                  </div>
+                                  <p className="mt-1 text-sm text-gray-600">{stop.reason}</p>
+                                  <div className="mt-1 flex gap-3 text-sm">
+                                    <a
+                                      href={stop.mapsUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-700 hover:underline"
+                                    >
+                                      Open map
+                                    </a>
+                                    <a
+                                      href={stop.bookingUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-700 hover:underline"
+                                    >
+                                      Official/booking search
+                                    </a>
+                                  </div>
+                                </li>
+                              ))}
+                            </ol>
+                          ) : (
+                            <p className="mt-2 text-sm text-gray-500">Flexible day — add places from the map when ready.</p>
+                          )}
+                        </section>
+                      ))}
+                    </div>
+                  </details>
+                )}
+
+                {trip.planningGuidance && trip.planningGuidance.length > 0 && (
+                  <details className="mt-3 rounded-lg border border-gray-200 p-4">
+                    <summary className="cursor-pointer font-medium">Planning guidance used</summary>
+                    <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-gray-600">
+                      {trip.planningGuidance.map((guidance, index) => (
+                        <li key={`${trip.id}-guidance-${index}`}>{guidance}</li>
+                      ))}
+                    </ul>
+                  </details>
                 )}
               </div>
             ))}

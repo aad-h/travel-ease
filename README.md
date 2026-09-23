@@ -1,6 +1,8 @@
 # TravelEase
 
-TravelEase is a Next.js travel-planning application. Users can create accounts, sign in with email/password or Google, plan and save trips, search for nearby places, and visualize routes with Google Maps.
+TravelEase is a Next.js travel-planning application. Users can create accounts, sign in with email/password or Google, plan and save trips, search for nearby places, visualize routes with Google Maps, and generate personalized day-by-day itineraries.
+
+The smart planner considers budget, group size, hotel/home base, daily hours, pace, interests, dietary or accessibility needs, and a hidden-gems preference. It uses a deterministic local scoring and retrieval engine, so generating an itinerary does not require a paid AI provider.
 
 ## Source provenance and attribution
 
@@ -16,6 +18,7 @@ This repository is a clean migration of the existing TravelEase application from
 - Google Maps JavaScript, Places, and Routes APIs
 - SMTP password-reset email through Nodemailer
 - Tailwind CSS 4 through PostCSS
+- Local deterministic itinerary scoring and knowledge retrieval (RAG-ready, no hosted AI)
 
 ## Local setup
 
@@ -34,13 +37,17 @@ For complete account and deployment instructions, see [SETUP.md](./SETUP.md).
 ## Validation commands
 
 ```bash
+npm test
+npx tsc --noEmit
 npm run lint
 npm run build
 npm run dev
 ```
 
-No automated test script is defined in the supplied `package.json`. The supplied source also has no ESLint configuration, so `npm run lint` currently opens Next.js's first-time configuration prompt instead of performing a non-interactive lint run. That pre-existing setup gap is recorded in [MIGRATION_REPORT.md](./MIGRATION_REPORT.md).
+`npm test` covers the local planner's ranking, scheduling, retrieval, link generation, and date validation. The supplied source has no ESLint configuration, so `npm run lint` currently opens Next.js's first-time configuration prompt instead of performing a non-interactive lint run. That pre-existing setup gap is recorded in [MIGRATION_REPORT.md](./MIGRATION_REPORT.md).
 
 ## Project documentation
 
 The original product requirements are preserved in [Project_Vision.md](./Project_Vision.md).
+
+The smart-planner scope and cost boundary are documented in [docs/SMART_PLANNER_IMPLEMENTATION.md](./docs/SMART_PLANNER_IMPLEMENTATION.md).

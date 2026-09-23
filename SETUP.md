@@ -42,6 +42,10 @@ The application creates data through normal use; no migration or seed script was
 5. Create a separate server API key. Restrict it to Places API (New) and Routes API. If your hosting setup supports a stable source-IP restriction, add it; otherwise keep API restrictions enabled and regularly review usage.
 6. Put the server key into `GOOGLE_MAP_API`, `GOOGLE_PLACES_API`, and `GOOGLE_ROUTES_API`. You may create separate restricted server keys for each variable instead.
 
+The smart itinerary generator does not call Google Maps Platform. Google usage happens only when someone uses destination autocomplete, explicitly searches the map for nearby places, or displays a route. API restrictions and project-level monitoring remain necessary because Google Maps Platform quotas and billing belong to the Google Cloud project, not to Git commits.
+
+For cost safety, create a small billing budget alert, review Maps Platform usage regularly, and reduce any adjustable project quotas. Budget alerts notify you but do not provide a guaranteed spending cap. Disabling the APIs or billing is the only absolute stop, and it also disables the associated map features.
+
 `NEXT_PUBLIC_GOOGLE_JSMAP_API` is intentionally sent to browsers, so its website and API restrictions are essential. The three server keys must not use the `NEXT_PUBLIC_` prefix.
 
 ### Important Places API compatibility note
