@@ -34,6 +34,7 @@ npm run dev
 Open <http://localhost:3000>. Fill in `.env.local` before testing database, maps, OAuth, or password-reset features. Never commit `.env.local`.
 
 For complete account and deployment instructions, see [SETUP.md](./SETUP.md).
+For a repeatable local verification checklist, see [docs/LOCAL_SMOKE_TEST.md](./docs/LOCAL_SMOKE_TEST.md).
 
 ## Validation commands
 
