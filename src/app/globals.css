@@ -24,3 +24,25 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Keep keyboard navigation visible across native controls and Tailwind UI. */
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+
+::selection {
+  background: #bfdbfe;
+  color: #172554;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
